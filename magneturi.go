@@ -187,10 +187,7 @@ func (magnetURI *MagnetURI) String() (string, error) {
 }
 
 func (magnetURI *MagnetURI) hasParameters() bool {
-	if len(magnetURI.ExactTopics()) != 0 ||
-		len(magnetURI.DisplayNames()) != 0 ||
-		len(magnetURI.KeywordTopics()) != 0 ||
-		len(magnetURI.ManifestTopics()) != 0 {
+	if len(magnetURI.Parameters) != 0 {
 		return true
 	}
 	return false
