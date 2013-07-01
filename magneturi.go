@@ -33,16 +33,19 @@ const (
 	manifestTopicPrefix   = "mt"
 )
 
+// MagnetURI represents a uniform resource identifier following the magnet scheme.
 type MagnetURI struct {
 	Parameters []Parameter
 }
 
+// Parameter represents a parameter in a Magnet URI.
 type Parameter struct {
 	Prefix string
 	Index  int // 0 means there is no index specified for the parameter.
 	Value  string
 }
 
+// ExactTopics returns the list of exact topic parameters of the Magnet URI.
 func (magnetURI *MagnetURI) ExactTopics() []Parameter {
 	return magnetURI.parametersByPrefix(exactTopicPrefix)
 }
@@ -57,14 +60,17 @@ func (magnetURI *MagnetURI) parametersByPrefix(prefix string) []Parameter {
 	return prefixParameters
 }
 
+// DisplayNames returns the list of display name parameters of the Magnet URI.
 func (magnetURI *MagnetURI) DisplayNames() []Parameter {
 	return magnetURI.parametersByPrefix(displayNamePrefix)
 }
 
+// KeywordTopics returns the list of keyword topic parameters of the Magnet URI.
 func (magnetURI *MagnetURI) KeywordTopics() []Parameter {
 	return magnetURI.parametersByPrefix(keywordTopicPrefix)
 }
 
+// ManifestTopics returns the list of manifest topic parameters of the Magnet URI.
 func (magnetURI *MagnetURI) ManifestTopics() []Parameter {
 	return magnetURI.parametersByPrefix(manifestTopicPrefix)
 }
@@ -72,10 +78,7 @@ func (magnetURI *MagnetURI) ManifestTopics() []Parameter {
 // Equal returns true if the Magnet URIs are equal, false if not.
 // The order of the parameters is not important.
 func (magnetURI MagnetURI) Equal(x MagnetURI) bool {
-	return compareParameters(magnetURI.ExactTopics(), x.ExactTopics()) &&
-		compareParameters(magnetURI.DisplayNames(), x.DisplayNames()) &&
-		compareParameters(magnetURI.KeywordTopics(), x.KeywordTopics()) &&
-		compareParameters(magnetURI.ManifestTopics(), x.ManifestTopics())
+	return compareParameters(magnetURI.Parameters, x.Parameters)
 }
 
 func compareParameters(first []Parameter, second []Parameter) bool {
