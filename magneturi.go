@@ -149,7 +149,10 @@ func splitPrefixIndex(prefix string) (string, int, error) {
 	if strings.Contains(prefix, ".") {
 		prefixSplit := strings.SplitN(prefix, ".", 2)
 		index, err := strconv.Atoi(prefixSplit[1])
-		return prefixSplit[0], index, err
+		if err != nil {
+			return "", index, err
+		}
+		return prefixSplit[0], index, nil
 	}
 	return prefix, 0, nil
 }
