@@ -128,8 +128,7 @@ func parseParameters(parameters []string) (magnetURI MagnetURI, err error) {
 	return
 }
 
-func parseParameter(
-	parameter string, magnetURI MagnetURI) (MagnetURI, error) {
+func parseParameter(parameter string, magnetURI MagnetURI) (MagnetURI, error) {
 	parameterSplit := strings.SplitN(parameter, "=", 2)
 	if len(parameterSplit) == 2 {
 		prefix := parameterSplit[0]
