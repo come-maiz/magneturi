@@ -130,19 +130,19 @@ func parseParameters(parameters []string) (magnetURI MagnetURI, err error) {
 
 func parseParameter(parameter string, magnetURI MagnetURI) (MagnetURI, error) {
 	parameterSplit := strings.SplitN(parameter, "=", 2)
-	if len(parameterSplit) == 2 {
-		prefix := parameterSplit[0]
-		prefix, index, err := splitPrefixIndex(prefix)
-		if err != nil {
-			return MagnetURI{}, errors.New(
-				fmt.Sprintf(
-					"Wrong parameter prefix: %q; %s", prefix, err.Error()))
-		}
-		value := parameterSplit[1]
-		return addParameterToMagnetURI(prefix, index, value, magnetURI)
+	if len(parameterSplit) != 2 {
+		return MagnetURI{}, errors.New(
+			fmt.Sprintf("Parameter without prefix: %q", parameter))
 	}
-	return MagnetURI{}, errors.New(
-		fmt.Sprintf("Parameter without prefix: %q", parameter))
+	prefix := parameterSplit[0]
+	prefix, index, err := splitPrefixIndex(prefix)
+	if err != nil {
+		return MagnetURI{}, errors.New(
+			fmt.Sprintf(
+			    "Wrong parameter prefix: %q; %s", prefix, err.Error()))
+	}
+	value := parameterSplit[1]
+	return addParameterToMagnetURI(prefix, index, value, magnetURI)
 }
 
 func splitPrefixIndex(prefix string) (string, int, error) {
@@ -157,14 +157,13 @@ func splitPrefixIndex(prefix string) (string, int, error) {
 func addParameterToMagnetURI(
 	prefix string, index int, value string, magnetURI MagnetURI) (
 	MagnetURI, error) {
-	if isValidPrefix(prefix) {
-		var parameter = Parameter{prefix, index, value}
-		magnetURI.Parameters = append(magnetURI.Parameters, parameter)
-		return magnetURI, nil
+	if !isValidPrefix(prefix) {
+		return MagnetURI{}, errors.New(
+		    fmt.Sprintf("Unknown parameter prefix: %q", prefix))
 	}
-	return MagnetURI{}, errors.New(
-		fmt.Sprintf("Unknown parameter prefix: %q", prefix))
-
+	var parameter = Parameter{prefix, index, value}
+	magnetURI.Parameters = append(magnetURI.Parameters, parameter)
+	return magnetURI, nil
 }
 
 func isValidPrefix(prefix string) bool {
@@ -176,12 +175,12 @@ func isValidPrefix(prefix string) bool {
 func (magnetURI *MagnetURI) String() (string, error) {
 	var s string = ""
 	var err error = nil
-	if magnetURI.hasParameters() {
+	if !magnetURI.hasParameters() {
+		err = errors.New("The Magnet URI has no parameters.")
+	} else {
 		s = magnetURISchemaPrefix
 		parameters := magnetURI.parameterStrings()
 		s += strings.Join(parameters, "&")
-	} else {
-		err = errors.New("The Magnet URI has no parameters.")
 	}
 	return s, err
 }
