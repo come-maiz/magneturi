@@ -154,9 +154,7 @@ func splitPrefixIndex(prefix string) (string, int, error) {
 	return prefix, 0, nil
 }
 
-func addParameterToMagnetURI(
-	prefix string, index int, value string, magnetURI MagnetURI) (
-	MagnetURI, error) {
+func addParameterToMagnetURI(prefix string, index int, value string, magnetURI MagnetURI) (MagnetURI, error) {
 	if !isValidPrefix(prefix) {
 		return MagnetURI{}, errors.New(
 		    fmt.Sprintf("Unknown parameter prefix: %q", prefix))
