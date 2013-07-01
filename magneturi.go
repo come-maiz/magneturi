@@ -14,9 +14,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // Package magneturi parses Magnet URIs.
-// See the schema overview at
-// http://magnet-uri.sourceforge.net/magnet-draft-overview.txt
-
+// See the schema overview at:
+//     http://magnet-uri.sourceforge.net/magnet-draft-overview.txt
 package magneturi
 
 import (
