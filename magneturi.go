@@ -174,16 +174,14 @@ func isValidPrefix(prefix string) bool {
 
 // String reassembles the MagnetURI into a valid MagnetURI string.
 func (magnetURI *MagnetURI) String() (string, error) {
-	var s string
-	var err error = nil
 	if !magnetURI.hasParameters() {
-		err = errors.New("The Magnet URI has no parameters.")
-	} else {
-		s = magnetURISchemaPrefix
-		parameters := magnetURI.parameterStrings()
-		s += strings.Join(parameters, "&")
+		err := errors.New("The Magnet URI has no parameters.")
+		return "", err
 	}
-	return s, err
+	parameterStrings := magnetURI.parameterStrings()
+	parameters := strings.Join(parameterStrings, "&")
+	s := fmt.Sprintf("%s%s", magnetURISchemaPrefix, parameters)
+	return s, nil
 }
 
 func (magnetURI *MagnetURI) hasParameters() bool {
