@@ -118,16 +118,14 @@ func Parse(rawMagnetURI string) (MagnetURI, error) {
 			magnetURISchemaPrefix))
 }
 
-func parseParameters(parameters []string) (MagnetURI, error) {
-	magnetURI := MagnetURI{}
-	var err error = nil
+func parseParameters(parameters []string) (magnetURI MagnetURI, err error) {
 	for _, parameter := range parameters {
 		magnetURI, err = parseParameter(parameter, magnetURI)
 		if err != nil {
 			magnetURI = MagnetURI{}
 		}
 	}
-	return magnetURI, err
+	return
 }
 
 func parseParameter(
