@@ -34,42 +34,100 @@ func TestCompareParameters(t *testing.T) {
 }
 
 type compareParametersScenario struct {
-	Name string
-	FirstParameters []string
-	SecondParameters []string
-	ExpectedResult bool
+	Name             string
+	FirstParameters  []Parameter
+	SecondParameters []Parameter
+	ExpectedResult   bool
 }
 
 var compareParametersScenarios = []compareParametersScenario{
 	{
-		Name: "Empty parameters",
-		FirstParameters: []string{},
-		SecondParameters: []string{},
-	    ExpectedResult: true,
+		Name:             "Empty parameters",
+		FirstParameters:  []Parameter{},
+		SecondParameters: []Parameter{},
+		ExpectedResult:   true,
 	},
 	{
 		Name: "Multiple parameters",
-		FirstParameters: []string{"param1", "param2", "param3"},
-		SecondParameters: []string{"param1", "param2", "param3"},
-	    ExpectedResult: true,
+		FirstParameters: []Parameter{
+			Parameter{"pref", 0, "param1"},
+			Parameter{"pref", 0, "param2"},
+			Parameter{"pref", 0, "param3"},
+		},
+		SecondParameters: []Parameter{
+			Parameter{"pref", 0, "param1"},
+			Parameter{"pref", 0, "param2"},
+			Parameter{"pref", 0, "param3"},
+		},
+		ExpectedResult: true,
 	},
 	{
 		Name: "Parameters in different order",
-		FirstParameters: []string{"param1", "param3", "param2"},
-		SecondParameters: []string{"param1", "param2", "param3"},
-	    ExpectedResult: true,
+		FirstParameters: []Parameter{
+			Parameter{"pref", 0, "param1"},
+			Parameter{"pref", 0, "param2"},
+			Parameter{"pref", 0, "param3"},
+		},
+		SecondParameters: []Parameter{
+			Parameter{"pref", 0, "param1"},
+			Parameter{"pref", 0, "param3"},
+			Parameter{"pref", 0, "param2"},
+		},
+		ExpectedResult: true,
 	},
 	{
 		Name: "Missing parameter",
-		FirstParameters: []string{"param1", "param2"},
-		SecondParameters: []string{"param1"},
-	    ExpectedResult: false,
+		FirstParameters: []Parameter{
+			Parameter{"pref", 0, "param1"},
+			Parameter{"pref", 0, "param2"},
+		},
+		SecondParameters: []Parameter{
+			Parameter{"pref", 0, "param1"},
+		},
+		ExpectedResult: false,
 	},
 	{
 		Name: "Extra parameter",
-		FirstParameters: []string{"param1", "param2"},
-		SecondParameters: []string{"param1", "param2", "param3"},
-	    ExpectedResult: false,
+		FirstParameters: []Parameter{
+			Parameter{"pref", 0, "param1"},
+			Parameter{"pref", 0, "param2"},
+		},
+		SecondParameters: []Parameter{
+			Parameter{"pref", 0, "param1"},
+			Parameter{"pref", 0, "param3"},
+			Parameter{"pref", 0, "param2"},
+		},
+		ExpectedResult: false,
+	},
+	{
+		Name: "Wrong prefix",
+		FirstParameters: []Parameter{
+			Parameter{"pref", 0, "param1"},
+		},
+		SecondParameters: []Parameter{
+			Parameter{"wrong prefix", 0, "param1"},
+		},
+		ExpectedResult: false,
+	},
+	{
+		Name: "Wrong index",
+		FirstParameters: []Parameter{
+			Parameter{"pref", 0, "param1"},
+		},
+		SecondParameters: []Parameter{
+			Parameter{"pref", 1, "param1"},
+		},
+		ExpectedResult: false,
+	},
+	{
+		Name: "Wrong value",
+		FirstParameters: []Parameter{
+			Parameter{"pref", 0, "param1"},
+		},
+		SecondParameters: []Parameter{
+			Parameter{"pref", 0, "wrong value"},
+		},
+		ExpectedResult: false,
 	},
 }
 
@@ -87,74 +145,110 @@ func TestCompareMagnetURIs(t *testing.T) {
 }
 
 type compareMagnetURIsScenario struct {
-	Name string
-	FirstMagnetURI MagnetURI
+	Name            string
+	FirstMagnetURI  MagnetURI
 	SecondMagnetURI MagnetURI
-	ExpectedResult bool
+	ExpectedResult  bool
 }
 
 var compareMagnetURIsScenarios = []compareMagnetURIsScenario{
 	{
-		Name: "Empty Magnet URIs",
-		FirstMagnetURI: MagnetURI{},
+		Name:            "Empty Magnet URIs",
+		FirstMagnetURI:  MagnetURI{},
 		SecondMagnetURI: MagnetURI{},
-	    ExpectedResult: true,
+		ExpectedResult:  true,
 	},
 	{
 		Name: "Magnet URIs with all the parameters",
 		FirstMagnetURI: MagnetURI{
-		    ExactTopics: []string{"xt1", "xt2"},
-			DisplayNames: []string{"dn1", "dn2"},
-	        KeywordTopics: []string{"kt1", "kt2"},
-			ManifestTopics: []string{"mt1", "mt2"},
+			Parameters: []Parameter{
+				Parameter{"xt", 0, "xt1"},
+				Parameter{"xt", 0, "xt2"},
+				Parameter{"dn", 0, "dn1"},
+				Parameter{"dn", 0, "dn2"},
+				Parameter{"kt", 0, "kt1"},
+				Parameter{"kt", 0, "kt2"},
+				Parameter{"mt", 0, "mt1"},
+				Parameter{"mt", 0, "mt2"},
+			},
 		},
 		SecondMagnetURI: MagnetURI{
-		    ExactTopics: []string{"xt1", "xt2"},
-			DisplayNames: []string{"dn1", "dn2"},
-	        KeywordTopics: []string{"kt1", "kt2"},
-			ManifestTopics: []string{"mt1", "mt2"},
+			Parameters: []Parameter{
+				Parameter{"xt", 0, "xt1"},
+				Parameter{"xt", 0, "xt2"},
+				Parameter{"dn", 0, "dn1"},
+				Parameter{"dn", 0, "dn2"},
+				Parameter{"kt", 0, "kt1"},
+				Parameter{"kt", 0, "kt2"},
+				Parameter{"mt", 0, "mt1"},
+				Parameter{"mt", 0, "mt2"},
+			},
 		},
-	    ExpectedResult: true,
+		ExpectedResult: true,
 	},
 	{
 		Name: "Magnet URIs with wrong exact topics",
 		FirstMagnetURI: MagnetURI{
-		    ExactTopics: []string{"xt1", "xt2"},
+			Parameters: []Parameter{
+				Parameter{"xt", 0, "xt1"},
+				Parameter{"xt", 0, "xt2"},
+			},
 		},
 		SecondMagnetURI: MagnetURI{
-		    ExactTopics: []string{"xt1", "wrong parameter"},
+			Parameters: []Parameter{
+				Parameter{"xt", 0, "xt1"},
+				Parameter{"xt", 0, "wrong parameter"},
+			},
 		},
-	    ExpectedResult: false,
+		ExpectedResult: false,
 	},
 	{
 		Name: "Magnet URIs with wrong display names",
 		FirstMagnetURI: MagnetURI{
-		    DisplayNames: []string{"dn1", "dn2"},
+			Parameters: []Parameter{
+				Parameter{"dn", 0, "dn1"},
+				Parameter{"dn", 0, "dn2"},
+			},
 		},
 		SecondMagnetURI: MagnetURI{
-		    DisplayNames: []string{"dn1", "wrong parameter"},
+			Parameters: []Parameter{
+				Parameter{"dn", 0, "dn1"},
+				Parameter{"dn", 0, "wrong parameter"},
+			},
 		},
-	    ExpectedResult: false,
+		ExpectedResult: false,
 	},
 	{
 		Name: "Magnet URIs with wrong keyword topics",
 		FirstMagnetURI: MagnetURI{
-		    KeywordTopics: []string{"kt1", "kt2"},
+			Parameters: []Parameter{
+				Parameter{"kt", 0, "kt1"},
+				Parameter{"kt", 0, "kt2"},
+			},
 		},
 		SecondMagnetURI: MagnetURI{
-		    KeywordTopics: []string{"kt1", "wrong parameter"},
+			Parameters: []Parameter{
+				Parameter{"kt", 0, "kt1"},
+				Parameter{"kt", 0, "wrong parameter"},
+			},
 		},
-	    ExpectedResult: false,
+		ExpectedResult: false,
 	},
 	{
 		Name: "Magnet URIs with wrong manifest topics",
 		FirstMagnetURI: MagnetURI{
-		    ManifestTopics: []string{"mt1", "mt2"},
+			Parameters: []Parameter{
+				Parameter{"mt", 0, "mt1"},
+				Parameter{"mt", 0, "mt2"},
+			},
 		},
 		SecondMagnetURI: MagnetURI{
-		    ManifestTopics: []string{"mt1", "wrong parameter"},
+			Parameters: []Parameter{
+				Parameter{"mt", 0, "mt1"},
+				Parameter{"mt", 0, "wrong parameter"},
+			},
 		},
-	    ExpectedResult: false,
+		ExpectedResult: false,
 	},
 }
 
@@ -219,9 +313,9 @@ func TestParseMagnetURI(t *testing.T) {
 }
 
 type magnetURIConvertionScenario struct {
-	Name           string
-	URIStruct      MagnetURI
-	RawMagnetURI   string
+	Name         string
+	URIStruct    MagnetURI
+	RawMagnetURI string
 }
 
 var magnetURIConvertionScenarios = []magnetURIConvertionScenario{
@@ -230,18 +324,27 @@ var magnetURIConvertionScenarios = []magnetURIConvertionScenario{
 	{
 		Name: "Overview example 1",
 		URIStruct: MagnetURI{
-			ExactTopics: []string{
-				"urn:sha1:YNCKHTQCWBTRNJIV4WNAE52SJUQCZO5C"}},
+			Parameters: []Parameter{
+				Parameter{
+					"xt", 0, "urn:sha1:YNCKHTQCWBTRNJIV4WNAE52SJUQCZO5C",
+				},
+			},
+		},
 		RawMagnetURI: "magnet:?xt=urn:sha1:YNCKHTQCWBTRNJIV4WNAE52SJUQCZO5C",
 	},
 	{
 		Name: "Overview example 2",
 		URIStruct: MagnetURI{
-			ExactTopics: []string{
-				"urn:sha1:YNCKHTQCWBTRNJIV4WNAE52SJUQCZO5C"},
-			DisplayNames: []string{
-				"Great+Speeches+-+Martin+Luther+King+Jr.+-+" +
-					"I+Have+A+Dream.mp3"}},
+			Parameters: []Parameter{
+				Parameter{
+					"xt", 0, "urn:sha1:YNCKHTQCWBTRNJIV4WNAE52SJUQCZO5C",
+				},
+				Parameter{
+					"dn", 0, "Great+Speeches+-+Martin+Luther+King+Jr.+-+" +
+						"I+Have+A+Dream.mp3",
+				},
+			},
+		},
 		RawMagnetURI: "magnet:?" +
 			"xt=urn:sha1:YNCKHTQCWBTRNJIV4WNAE52SJUQCZO5C&" +
 			"dn=Great+Speeches+-+Martin+Luther+King+Jr.+-+" +
@@ -249,27 +352,39 @@ var magnetURIConvertionScenarios = []magnetURIConvertionScenario{
 	},
 	{
 		Name: "Overview example 3",
-		URIStruct: MagnetURI{KeywordTopics: []string{
-			"martin+luther+king+mp3"}},
+		URIStruct: MagnetURI{
+			Parameters: []Parameter{
+				Parameter{"kt", 0, "martin+luther+king+mp3"},
+			},
+		},
 		RawMagnetURI: "magnet:?kt=martin+luther+king+mp3",
 	},
 	{
 		Name: "Overview example 4",
-		URIStruct: MagnetURI{ExactTopics: []string{
-			"urn:sha1:YNCKHTQCWBTRNJIV4WNAE52SJUQCZO5C",
-			"urn:sha1:TXGCZQTH26NL6OUQAJJPFALHG2LTGBC7"}},
+		URIStruct: MagnetURI{
+			Parameters: []Parameter{
+				Parameter{
+					"xt", 1, "urn:sha1:YNCKHTQCWBTRNJIV4WNAE52SJUQCZO5C",
+				},
+				Parameter{
+					"xt", 2, "urn:sha1:TXGCZQTH26NL6OUQAJJPFALHG2LTGBC7",
+				},
+			},
+		},
 		RawMagnetURI: "magnet:?" +
 			"xt.1=urn:sha1:YNCKHTQCWBTRNJIV4WNAE52SJUQCZO5C&" +
 			"xt.2=urn:sha1:TXGCZQTH26NL6OUQAJJPFALHG2LTGBC7",
 	},
 	{
 		Name: "Overview example 5",
-		URIStruct: MagnetURI{ManifestTopics: []string{
-			"http://weblog.foo/all-my-favorites.rss"}},
+		URIStruct: MagnetURI{
+			Parameters: []Parameter{
+				Parameter{"mt", 0, "http://weblog.foo/all-my-favorites.rss"},
+			},
+		},
 		RawMagnetURI: "magnet:?mt=http://weblog.foo/all-my-favorites.rss",
 	},
 }
-
 
 func TestMagnetURIToStringWithoutParameters(t *testing.T) {
 	magnetURI := MagnetURI{}

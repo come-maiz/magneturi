@@ -28,29 +28,58 @@ import (
 
 const (
 	magnetURISchemaPrefix = "magnet:?"
-	exactTopicPrefix = "xt"
-	displayNamePrefix = "dn"
-	keywordTopicPrefix = "kt"
-	manifestTopicPrefix = "mt"
+	exactTopicPrefix      = "xt"
+	displayNamePrefix     = "dn"
+	keywordTopicPrefix    = "kt"
+	manifestTopicPrefix   = "mt"
 )
 
 type MagnetURI struct {
-	ExactTopics    []string // xt
-	DisplayNames   []string // dn
-	KeywordTopics  []string // kt
-	ManifestTopics []string // mt
+	Parameters []Parameter
+}
+
+type Parameter struct {
+	Prefix string
+	Index  int // 0 means there is no index specified for the parameter.
+	Value  string
+}
+
+func (magnetURI *MagnetURI) ExactTopics() []Parameter {
+	return magnetURI.parametersByPrefix(exactTopicPrefix)
+}
+
+func (magnetURI *MagnetURI) parametersByPrefix(prefix string) []Parameter {
+	prefixParameters := make([]Parameter, 0, len(magnetURI.Parameters))
+	for _, parameter := range magnetURI.Parameters {
+		if parameter.Prefix == prefix {
+			prefixParameters = append(prefixParameters, parameter)
+		}
+	}
+	return prefixParameters
+}
+
+func (magnetURI *MagnetURI) DisplayNames() []Parameter {
+	return magnetURI.parametersByPrefix(displayNamePrefix)
+}
+
+func (magnetURI *MagnetURI) KeywordTopics() []Parameter {
+	return magnetURI.parametersByPrefix(keywordTopicPrefix)
+}
+
+func (magnetURI *MagnetURI) ManifestTopics() []Parameter {
+	return magnetURI.parametersByPrefix(manifestTopicPrefix)
 }
 
 // Equal returns true if the Magnet URIs are equal, false if not.
 // The order of the parameters is not important.
 func (magnetURI MagnetURI) Equal(x MagnetURI) bool {
-	return compareParameters(magnetURI.ExactTopics, x.ExactTopics) &&
-		compareParameters(magnetURI.DisplayNames, x.DisplayNames) &&
-		compareParameters(magnetURI.KeywordTopics, x.KeywordTopics) &&
-		compareParameters(magnetURI.ManifestTopics, x.ManifestTopics)
+	return compareParameters(magnetURI.ExactTopics(), x.ExactTopics()) &&
+		compareParameters(magnetURI.DisplayNames(), x.DisplayNames()) &&
+		compareParameters(magnetURI.KeywordTopics(), x.KeywordTopics()) &&
+		compareParameters(magnetURI.ManifestTopics(), x.ManifestTopics())
 }
 
-func compareParameters(first []string, second []string) bool {
+func compareParameters(first []Parameter, second []Parameter) bool {
 	if len(first) == len(second) {
 		for _, parameter := range first {
 			if !containsParameter(second, parameter) {
@@ -62,9 +91,11 @@ func compareParameters(first []string, second []string) bool {
 	return false
 }
 
-func containsParameter(list []string, parameter string) bool {
+func containsParameter(list []Parameter, parameter Parameter) bool {
 	for _, element := range list {
-		if parameter == element {
+		if parameter.Prefix == element.Prefix &&
+			parameter.Index == element.Index &&
+			parameter.Value == element.Value {
 			return true
 		}
 	}
@@ -106,7 +137,7 @@ func parseParameter(
 		if err != nil {
 			return MagnetURI{}, errors.New(
 				fmt.Sprintf(
-      				"Wrong parameter prefix: %q; %s", prefix, err.Error()))
+					"Wrong parameter prefix: %q; %s", prefix, err.Error()))
 		}
 		value := parameterSplit[1]
 		return addParameterToMagnetURI(prefix, index, value, magnetURI)
@@ -121,44 +152,25 @@ func splitPrefixIndex(prefix string) (string, int, error) {
 		index, err := strconv.Atoi(prefixSplit[1])
 		return prefixSplit[0], index, err
 	}
-	return prefix, 1, nil
+	return prefix, 0, nil
 }
 
 func addParameterToMagnetURI(
 	prefix string, index int, value string, magnetURI MagnetURI) (
 	MagnetURI, error) {
-	switch {
-		case prefix == exactTopicPrefix:
-			magnetURI.ExactTopics = insertParameter(
-				index, value, magnetURI.ExactTopics)
-			return magnetURI, nil
-		case prefix == displayNamePrefix:
-			magnetURI.DisplayNames = append(
-				magnetURI.DisplayNames, value)
-			return magnetURI, nil
-		case prefix == keywordTopicPrefix:
-			magnetURI.KeywordTopics = append(
-				magnetURI.KeywordTopics, value)
-			return magnetURI, nil
-		case prefix == manifestTopicPrefix:
-			magnetURI.ManifestTopics = append(
-				magnetURI.ManifestTopics, value)
-			return magnetURI, nil
-		default:
-			return MagnetURI{}, errors.New(
-				fmt.Sprintf("Unknown parameter prefix: %q", prefix))
+	if isValidPrefix(prefix) {
+		var parameter = Parameter{prefix, index, value}
+		magnetURI.Parameters = append(magnetURI.Parameters, parameter)
+		return magnetURI, nil
 	}
+	return MagnetURI{}, errors.New(
+		fmt.Sprintf("Unknown parameter prefix: %q", prefix))
+
 }
 
-func insertParameter(
-	index int, value string, parametersList []string) []string {
-	if cap(parametersList) < index {
-		newParameterList := make([]string, index, index)
-		copy(newParameterList, parametersList)
-		parametersList = newParameterList
-	}
-	parametersList[index-1] = value
-	return parametersList
+func isValidPrefix(prefix string) bool {
+	return prefix == exactTopicPrefix || prefix == displayNamePrefix ||
+		prefix == keywordTopicPrefix || prefix == manifestTopicPrefix
 }
 
 // String reassembles the MagnetURI into a valid MagnetURI string.
@@ -167,14 +179,7 @@ func (magnetURI *MagnetURI) String() (string, error) {
 	var err error = nil
 	if magnetURI.hasParameters() {
 		s = magnetURISchemaPrefix
-		parameters := getParametersWithPrefix(
-			exactTopicPrefix, magnetURI.ExactTopics)
-		parameters = append(parameters, getParametersWithPrefix(
-			displayNamePrefix, magnetURI.DisplayNames)...)
-		parameters = append(parameters, getParametersWithPrefix(
-			keywordTopicPrefix, magnetURI.KeywordTopics)...)
-		parameters = append(parameters, getParametersWithPrefix(
-			manifestTopicPrefix, magnetURI.ManifestTopics)...)
+		parameters := magnetURI.parameterStrings()
 		s += strings.Join(parameters, "&")
 	} else {
 		err = errors.New("The Magnet URI has no parameters.")
@@ -183,25 +188,28 @@ func (magnetURI *MagnetURI) String() (string, error) {
 }
 
 func (magnetURI *MagnetURI) hasParameters() bool {
-	if magnetURI.ExactTopics != nil || magnetURI.DisplayNames != nil ||
-		magnetURI.KeywordTopics != nil || magnetURI.ManifestTopics != nil {
+	if len(magnetURI.ExactTopics()) != 0 ||
+		len(magnetURI.DisplayNames()) != 0 ||
+		len(magnetURI.KeywordTopics()) != 0 ||
+		len(magnetURI.ManifestTopics()) != 0 {
 		return true
 	}
 	return false
 }
 
-func getParametersWithPrefix(prefix string, parameters []string) []string {
-	numberOfTopics := len(parameters)
-	parametersStrings := make([]string, 0, numberOfTopics)
-	if numberOfTopics == 1 {
-		parameterString := fmt.Sprintf("%s=%s", prefix, parameters[0])
-		parametersStrings = append(parametersStrings, parameterString)
-	} else {
-		for index, parameter := range parameters {
-			parameterString := fmt.Sprintf(
-				"%s.%d=%s", prefix, index+1, parameter)
-			parametersStrings = append(parametersStrings, parameterString)
-		}
+func (magnetURI *MagnetURI) parameterStrings() []string {
+	parameterStrings := make([]string, 0, len(magnetURI.Parameters))
+	for _, parameter := range magnetURI.Parameters {
+		parameterStrings = append(parameterStrings, parameter.String())
 	}
-	return parametersStrings
+	return parameterStrings
+}
+
+// String reassembles the Parameter into a valid MagnetURI parameter string.
+func (parameter *Parameter) String() string {
+	if parameter.Index != 0 {
+		return fmt.Sprintf(
+			"%s.%d=%s", parameter.Prefix, parameter.Index, parameter.Value)
+	}
+	return fmt.Sprintf("%s=%s", parameter.Prefix, parameter.Value)
 }
